@@ -36,6 +36,7 @@ option(OPT_BUILD_SPECTRAN_SOURCE "Build Spectran Source Module (Dependencies: Aa
 option(OPT_BUILD_SPECTRAN_HTTP_SOURCE "Build Spectran HTTP Source Module (no dependencies required)" ON)
 option(OPT_BUILD_SPYSERVER_SOURCE "Build SpyServer Source Module (no dependencies required)" ON)
 option(OPT_BUILD_USRP_SOURCE "Build USRP Source Module (libuhd)" OFF)
+option(OPT_BUILD_VRTZMQ_SOURCE "Build VRT ZMQ Source Module (Dependencies: libzmq libvrt)" ON)
 
 # Sinks
 option(OPT_BUILD_ANDROID_AUDIO_SINK "Build Android Audio Sink Module (Dependencies: AAudio, only for android)" OFF)
@@ -235,6 +236,9 @@ if (OPT_BUILD_USRP_SOURCE)
 add_subdirectory("source_modules/usrp_source")
 endif (OPT_BUILD_USRP_SOURCE)
 
+if (OPT_BUILD_VRTZMQ_SOURCE)
+add_subdirectory("source_modules/vrtzmq_source")
+endif (OPT_BUILD_VRTZMQ_SOURCE)
 
 # Sink modules
 if (OPT_BUILD_ANDROID_AUDIO_SINK)
@@ -256,7 +260,6 @@ endif (OPT_BUILD_NETWORK_SINK)
 if (OPT_BUILD_NEW_PORTAUDIO_SINK)
 add_subdirectory("sink_modules/new_portaudio_sink")
 endif (OPT_BUILD_NEW_PORTAUDIO_SINK)
-
 
 # Decoders
 if (OPT_BUILD_ATV_DECODER)
