@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
 project(vrtzmq_source)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/source_modules/vrtzmq_source/cmake")
+
 find_package(ZMQ REQUIRED)
 find_package(VRT REQUIRED)
 include_directories(${ZMQ_INCLUDE_DIRS} ${VRT_INCLUDE_DIRS})
