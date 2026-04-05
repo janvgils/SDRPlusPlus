@@ -66,6 +66,10 @@ public:
             instance = config.conf[name]["instance"];
             instance = std::clamp<int>(instance, 0, 65535);
         }
+        if (config.conf[name].contains("channel")) {
+            channel = config.conf[name]["channel"];
+            channel = std::clamp<int>(channel, 0, 65535);
+        }
         if (config.conf[name].contains("use_port")) {
             use_port = config.conf[name]["use_port"];
             use_port = std::clamp<int>(use_port, 0, 1);
@@ -172,7 +176,12 @@ private:
     static void tune(double freq, void* ctx) {
         VrtzmqSourceModule* _this = (VrtzmqSourceModule*)ctx;
         if (_this->running) {
-            // Nothing for now
+            // prevent tuning outside of band
+            if (_this->current_freq > 0)
+                if ( (freq < _this->current_freq - _this->current_sample_rate/2) || 
+                     (freq > _this->current_freq + _this->current_sample_rate/2) ) {
+                    tuner::tune(tuner::TUNER_MODE_IQ_ONLY, "", _this->current_freq);
+                }
         }
         _this->freq = freq;
         flog::info("VrtzmqSourceModule '{0}': Tune: {1}!", _this->name, freq);
@@ -197,6 +206,14 @@ private:
             _this->instance = std::clamp<int>(_this->instance, 0, 65535);
             config.acquire();
             config.conf[_this->name]["instance"] = _this->instance;
+            config.release(true);
+        }
+        SmGui::LeftLabel("Channel");
+        SmGui::FillWidth();
+        if (SmGui::InputInt(("##vrtzmq_channel_" + _this->name).c_str(), &_this->channel, 0, 0)) {
+            _this->channel = std::clamp<int>(_this->channel, 0, 65535);
+            config.acquire();
+            config.conf[_this->name]["channel"] = _this->channel;
             config.release(true);
         }
 
@@ -227,13 +244,10 @@ private:
         packet_type vrt_packet;
 
         init_context(&vrt_context);
-        uint32_t channel = 0;
-        vrt_packet.channel_filt = 1<<channel;
+        uint32_t use_channel = this->channel;
+        vrt_packet.channel_filt = 1<<use_channel;
 
         bool start_rx = false;
-
-        int64_t current_freq = 0;
-        uint32_t current_sample_rate = 0;
 
         while (true) {
             // Read samples from ZMQ
@@ -289,14 +303,15 @@ private:
     bool running = false;
     bool stopwork = false;
     double freq;
-    
-    // int samplerate = 10000000;
-    // int tempSamplerate = 10000000;
+
+    int64_t current_freq = 0;
+    uint32_t current_sample_rate = 0;
    
     char hostname[1024] = "localhost";
     int port = 50100;
     bool use_port = false;
     int instance = 0;
+    int channel = 0;
 
      // VRT ZMQ
     void *context;
